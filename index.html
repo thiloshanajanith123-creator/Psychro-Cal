@@ -330,9 +330,16 @@ if ('serviceWorker' in navigator) {
     .then(reg => console.log('Service worker registered.', reg.scope))
     .catch(err => console.warn('Service worker registration failed:', err));
 }
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js')
+    .then(() => console.log('Service Worker registered'))
+    .catch(err => console.error('SW error', err));
+}
 </script>
 
 <div class="app-footer">Developed by, P G T J Bandara. [Based on ASHRAE Fundamentals (SI)]</div>
 
 </body>
 </html>
+
