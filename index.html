@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#007bff">
+
+<title>Psychro CAL</title>
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icon.png">
+
+<style>
+/* ===== Base Theme ===== */
+body {
+    background: #ffffff; /* Secondary Color */
+    color: #222;
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px 24px 80px; /* space for footer on small screens */
+}
+
+h1 {
+    color: #007bff; /* Primary Color */
+    text-align: center;
+    margin-bottom: 6px;
+    font-size: 32px;
+}
+
+/* Motto under title */
+.motto {
+    text-align: center;
+    color: #3b6fb2;
+    margin-top: 0;
+    margin-bottom: 18px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Footer credit */
+.app-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    text-align: center;
+    font-size: 12px;
+    color: #555;
+    background: rgba(255,255,255,0.95);
+    padding: 6px 10px;
+    pointer-events: none;
+}
+
+/* ===== Container ===== */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 8px;
+}
+
+/* ===== Input Panel ===== */
+.input-panel {
+    flex: 1;
+    min-width: 250px;
+    max-width: 420px;
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.input-panel label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-weight: bold;
+    color: #007bff;
+}
+.input-panel input {
+    width: 120px;
+    padding: 6px 8px;
+    border: 1px solid #007bff;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* ===== Buttons ===== */
+.btn-row { margin-top: 10px; display:flex; gap:10px; flex-wrap:wrap; }
+button {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    padding: 10px 14px;
+    margin-top: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 6px;
+    transition: 0.15s;
+    font-size: 14px;
+}
+button.secondary {
+    background:#6c757d;
+}
+button:hover {
+    transform: translateY(-1px);
+}
+
+/* ===== Results Panel ===== */
+.results-panel {
+    flex: 2;
+    min-width: 320px;
+    max-width: 720px;
+    max-height: 520px;
+    overflow-y: auto;
+    background: #f1f3f5;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.result {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    background: #ffffff;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+}
+.result span.key { font-weight: bold; color: #007bff; }
+.result.warning { background: #ffcccc; color: #990000; }
+.result.sky { background: #cce5ff; color: #004085; }
+.result.yellow { background: #fff3cd; color: #856404; }
+
+/* Scrollbar for results panel */
+.results-panel::-webkit-scrollbar {
+    width: 8px;
+}
+.results-panel::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 4px;
+}
+.results-panel::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 4px;
+}
+
+/* ===== Responsive for mobile ===== */
+@media (max-width: 860px) {
+    .container { flex-direction: column; gap: 12px; padding: 10px; }
+    .input-panel { width: 100%; max-width: none; padding: 14px; }
+    .results-panel { width: 100%; max-height: none; padding: 14px; }
+    .input-panel input { width: 100px; }
+    h1 { font-size: 26px; }
+    .motto { font-size: 13px; }
+    button { font-size: 15px; padding: 10px 12px; }
+    .result { font-size: 13px; }
+}
+
+/* Small devices */
+@media (max-width: 420px) {
+    .input-panel label { flex-direction: column; align-items: flex-start; gap:6px; }
+    .input-panel input { width: 100%; }
+    .btn-row { justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+<h1>Psychro CAL</h1>
+<p class="motto">Professional Psychrometric Calculator</p>
+
+<div class="container">
+  <!-- Input Panel -->
+  <div class="input-panel">
+    <label>Dry Bulb Temp (°C): <input id="dbt" value="25" inputmode="decimal" pattern="[0-9.\-]+" /></label>
+    <label>Wet Bulb Temp (°C): <input id="wbt" value="20" inputmode="decimal" pattern="[0-9.\-]+" /></label>
+    <label>Altitude (m): <input id="alt" value="0" inputmode="numeric" /></label>
+    <label>Wind Speed (km/h): <input id="wind" value="0" inputmode="decimal" /></label>
+
+    <div class="btn-row">
+      <button onclick="calculateAll()">Calculate</button>
+      <button class="secondary" onclick="resetDefaults()">Reset to Default</button>
+    </div>
+  </div>
+
+  <!-- Results Panel -->
+  <div class="results-panel" id="results" aria-live="polite"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/psychrolib@1.1.0/psychrolib.min.js"></script>
+<script>
+// ===== Initialize Psychrolib SI =====
+psychrolib.SetUnitSystem(psychrolib.SI);
+
+// ===== Helpers =====
+function cToF(c){ return c*9/5+32; }
+function fToC(f){ return (f-32)*5/9; }
+
+// Heat Index (Rothfusz, NOAA)
+function calcHeatIndexC(db_c, rh_pct){
+    let T = cToF(db_c), RH = rh_pct;
+    let HI = (-42.379 + 2.04901523*T + 10.14333127*RH - 0.22475541*T*RH
+             - 0.00683783*T*T - 0.05481717*RH*RH + 0.00122874*T*T*RH
+             + 0.00085282*T*RH*RH - 0.00000199*T*T*RH*RH);
+    if(RH<13 && T>=80 && T<=112){ HI -= ((13-RH)/4)*Math.sqrt((17-Math.abs(T-95))/17); }
+    if(RH>85 && T>=80 && T<=87){ HI += ((RH-85)/10)*((87-T)/5); }
+    return fToC(HI);
+}
+
+// Wind Chill (Canadian/International)
+function calcWindChillC(Tc, v_kmh){
+    if(Tc>10 || v_kmh<4.8) return null;
+    return 13.12 + 0.6215*Tc - 11.37*Math.pow(v_kmh,0.16) + 0.3965*Tc*Math.pow(v_kmh,0.16);
+}
+
+// ===== Main Calculation =====
+function calculateAll(){
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = '';
+    try{
+        let dbt_c = parseFloat(document.getElementById("dbt").value);
+        let wbt_c = parseFloat(document.getElementById("wbt").value);
+        let altitude_m = parseFloat(document.getElementById("alt").value);
+        let wind_kmh = parseFloat(document.getElementById("wind").value)||0;
+
+        // If WBT greater than DBT -> auto-adjust, update input, show message, restore focus and stop
+        if (wbt_c > dbt_c) {
+            wbt_c = dbt_c;
+            const wbtInput = document.getElementById("wbt");
+            wbtInput.value = wbt_c.toFixed(2);
+
+            alert("Wet-bulb temperature cannot exceed dry-bulb.\nIt has been auto-adjusted.");
+
+            // restore focus to WBT for immediate typing
+            setTimeout(() => {
+                wbtInput.focus();
+                wbtInput.select();
+            }, 0);
+
+            return; // stop calculation this round
+        }
+
+        let iceMode = (dbt_c<0 || wbt_c<0);
+
+        let P_pa = psychrolib.GetStandardAtmPressure(altitude_m);
+        let P_kpa = P_pa/1000;
+        let P_mmhg = P_pa*0.00750061683;
+
+        let W = psychrolib.GetHumRatioFromTWetBulb(dbt_c,wbt_c,P_pa, iceMode);
+        if(W<0) W=0;
+
+        let rh_frac = psychrolib.GetRelHumFromHumRatio(dbt_c,W,P_pa);
+        rh_frac = Math.max(0,Math.min(1,rh_frac));
+        let rh_pct = rh_frac*100;
+
+        let dew_c = psychrolib.GetTDewPointFromRelHum(dbt_c,rh_frac, iceMode);
+        let enthalpy_kJkg = psychrolib.GetMoistAirEnthalpy(dbt_c,W, iceMode)/1000;
+        let spec_vol = psychrolib.GetMoistAirVolume(dbt_c,W,P_pa);
+        let air_density = psychrolib.GetMoistAirDensity(dbt_c,W,P_pa);
+
+        let heatDisplay="-";
+        if(dbt_c>=27){ heatDisplay=`${calcHeatIndexC(dbt_c,rh_pct).toFixed(2)} °C / ${cToF(calcHeatIndexC(dbt_c,rh_pct)).toFixed(2)} °F`; }
+
+        let apparentDisplay="-";
+        if(dbt_c>10 && dbt_c<27){ apparentDisplay=`${dbt_c.toFixed(2)} °C / ${cToF(dbt_c).toFixed(2)} °F`; }
+
+        let wc_val = calcWindChillC(dbt_c, wind_kmh);
+        let wcDisplay = wc_val!==null?`${wc_val.toFixed(2)} °C / ${cToF(wc_val).toFixed(2)} °F`:"-";
+
+        let resultsMap = {
+            "Dry Bulb Temp":`${dbt_c.toFixed(2)} °C / ${cToF(dbt_c).toFixed(2)} °F`,
+            "Wet Bulb Temp":`${wbt_c.toFixed(2)} °C / ${cToF(wbt_c).toFixed(2)} °F`,
+            "Dew Point":`${dew_c.toFixed(2)} °C / ${cToF(dew_c).toFixed(2)} °F`,
+            "Heat Index":heatDisplay,
+            "Apparent Temp":apparentDisplay,
+            "Wind Chill":wcDisplay,
+            "Relative Humidity":`${rh_pct.toFixed(2)} %`,
+            "Humidity Ratio":`${(W*1000).toFixed(4)} g/kg`,
+            "Atmospheric Pressure":`${P_kpa.toFixed(4)} kPa / ${P_mmhg.toFixed(2)} mmHg`,
+            "Enthalpy":`${enthalpy_kJkg.toFixed(4)} kJ/kg`,
+            "Specific Volume":`${spec_vol.toFixed(6)} m³/kg`,
+            "Air Density":`${air_density.toFixed(6)} kg/m³`
+        };
+
+        for(const key in resultsMap){
+            let div = document.createElement('div');
+            div.className='result';
+            if(key==="Heat Index" && dbt_c>=27 && parseFloat(resultsMap[key])>40) div.className+=' warning';
+            if(key==="Wind Chill" && wc_val!==null && wc_val<-10) div.className+=' sky';
+            if(key==="Relative Humidity" && (rh_pct<10||rh_pct>90)) div.className+=' yellow';
+            div.innerHTML=`<span class="key">${key}</span><span class="value">${resultsMap[key]}</span>`;
+            resultsDiv.appendChild(div);
+        }
+
+    }catch(err){
+        alert("Calculation error:\n"+err);
+    }
+}
+
+// ===== Reset Defaults function (keeps earlier feature) =====
+function resetDefaults() {
+    const dbtInput = document.getElementById("dbt");
+    const wbtInput = document.getElementById("wbt");
+    const altInput = document.getElementById("alt");
+    const windInput = document.getElementById("wind");
+
+    // Set default values
+    dbtInput.value = "25";
+    wbtInput.value = "20";
+    altInput.value = "0";
+    windInput.value = "0";
+
+    // Clear results
+    document.getElementById("results").innerHTML = "";
+
+    // Restore focus for immediate typing
+    setTimeout(() => {
+        dbtInput.focus();
+        dbtInput.select();
+    }, 0);
+}
+
+// ===== Register service worker for PWA / offline caching =====
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+    .then(reg => console.log('Service worker registered.', reg.scope))
+    .catch(err => console.warn('Service worker registration failed:', err));
+}
+</script>
+
+<div class="app-footer">Developed by, P G T J Bandara. [Based on ASHRAE Fundamentals (SI)]</div>
+
+</body>
+</html>
